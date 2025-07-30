@@ -116,13 +116,17 @@ function startScanner() {
         }
       };
 
-      requestAnimationFrame(scan);
+      // Only start scanning after video metadata is loaded
+      video.addEventListener('loadedmetadata', () => {
+        requestAnimationFrame(scan);
+      }, { once: true });
     })
     .catch((err) => {
       console.error("Camera access error:", err);
       alert("Unable to access camera. Please allow permission and try again.");
     });
 }
+
 function stopScanner() {
   const stopBtn = document.getElementById("stopScanBtn");
   stopBtn.style.display = "none";
