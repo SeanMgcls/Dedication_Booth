@@ -1,4 +1,6 @@
 let publicKey, privateKey;
+let memoryGameInProgress = false;
+let pendingQRGeneration = false;
 
 function generateKeys() {
   const keypair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
@@ -8,7 +10,13 @@ function generateKeys() {
   document.getElementById("privateKey").value = privateKey;
 }
 
+// --- ONLY trigger memory game on QR button click ---
 function encryptAndGenerateQR() {
+  if (!memoryGameInProgress) {
+    pendingQRGeneration = true;
+    showMemoryGameModal();
+    return;
+  }
   if (!publicKey) generateKeys();
   const msg = document.getElementById("message").value;
   const pub = forge.pki.publicKeyFromPem(publicKey);
@@ -23,6 +31,85 @@ function encryptAndGenerateQR() {
   link.href = document.getElementById("qrCanvas").toDataURL();
   link.style.display = "inline-block";
 }
+
+function encryptAndGenerateQR() {
+  // Only launch the game if not already in progress
+  if (!memoryGameInProgress) {
+    showMemoryGameModal();
+    return;
+  }
+  // If called from inside the game, this does nothing (see below)
+}
+
+function showMemoryGameModal() {
+  memoryGameInProgress = true;
+  document.getElementById('memory-game-section').classList.add('active');
+  startMemoryGame();
+}
+
+// --- Memory Game Implementation ---
+function startMemoryGame() {
+  const grid = document.getElementById('memoryGameGrid');
+  const emojis = ['🐱','🐶','🦁','🐸','🐵','🐼','🦊','🐮'];
+  let cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+
+  grid.innerHTML = '';
+  let first = null, second = null, lock = false, matched = 0;
+  cards.forEach((emoji, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'memory-card';
+    btn.dataset.emoji = emoji;
+    btn.dataset.index = i;
+    btn.textContent = '';
+    btn.onclick = function() {
+      if (lock || btn.textContent) return;
+      btn.textContent = emoji;
+      if (!first) {
+        first = btn;
+      } else {
+        second = btn;
+        lock = true;
+        setTimeout(() => {
+          if (first.dataset.emoji === second.dataset.emoji) {
+            matched += 2;
+            if (matched === cards.length) {
+              setTimeout(() => {
+                document.getElementById('memory-game-section').classList.remove('active');
+                memoryGameInProgress = false; // Mark game as not in progress
+                // --- DIRECTLY generate QR here, do not call encryptAndGenerateQR() ---
+                generateQRAfterGame();
+              }, 300);
+            }
+          } else {
+            first.textContent = '';
+            second.textContent = '';
+          }
+          first = second = null;
+          lock = false;
+        }, 700);
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function generateQRAfterGame() {
+  if (!publicKey) generateKeys();
+  const msg = document.getElementById("message").value;
+  const pub = forge.pki.publicKeyFromPem(publicKey);
+  const encrypted = pub.encrypt(msg, "RSA-OAEP");
+  const base64 = forge.util.encode64(encrypted);
+  new QRious({
+    element: document.getElementById("qrCanvas"),
+    value: base64,
+    size: 250,
+  });
+  const link = document.getElementById("downloadQR");
+  link.href = document.getElementById("qrCanvas").toDataURL();
+  link.style.display = "inline-block";
+}
+
+// --- The rest of your app logic remains the same ---
 
 function downloadKeys() {
   const blob = new Blob([
@@ -116,7 +203,6 @@ function startScanner() {
         }
       };
 
-      // Only start scanning after video metadata is loaded
       video.addEventListener('loadedmetadata', () => {
         requestAnimationFrame(scan);
       }, { once: true });

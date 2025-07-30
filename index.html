@@ -9,6 +9,29 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    align-items: center; justify-content: center;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: #fff; padding: 2rem; border-radius: 1rem;
+    text-align: center;
+  }
+  #memoryGameGrid {
+    display: grid; grid-template-columns: repeat(4, 60px);
+    gap: 10px; justify-content: center; margin: 1rem 0;
+  }
+  .memory-card {
+    width: 60px; height: 60px; font-size: 2rem;
+    background: #eee; border: 1px solid #ccc; cursor: pointer;
+  }
+  </style>
 </head>
 <body>
   <header class="header">
@@ -16,6 +39,14 @@
     <p>Encrypt • Generate • Scan • Decrypt</p>
     <button id="modeToggle">🌙 Toggle Mode</button>
   </header>
+
+  <!-- Memory game modal appears ONLY when generating a QR -->
+  <div id="memory-game-section" class="modal">
+    <div class="modal-content">
+      <h2>Memory Game</h2>
+      <div id="memoryGameGrid"></div>
+    </div>
+  </div>
 
   <main class="main-layout">
     <section class="card">
