@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twisted RSA QR Vault</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <h1>RSA 🔐</h1>
+    <p>Encrypt • Generate • Scan • Decrypt</p>
+    <button id="modeToggle">🌙 Toggle Mode</button>
+  </header>
+
+  <main class="main-layout">
+    <section class="card">
+      <h2>Encrypt & Generate QR</h2>
+      <textarea id="message" placeholder="Write your message here..."></textarea>
+      <button onclick="encryptAndGenerateQR()">🔐 Encrypt & Generate</button>
+      <canvas id="qrCanvas"></canvas>
+      <a id="downloadQR" download="secure_qr.png" style="display: none;">⬇ Download QR Code</a>
+    </section>
+
+    <section class="card">
+      <h2>Scan / Upload QR</h2>
+      <div class="custom-file">
+        <input type="file" id="qrUpload" accept="image/*" onchange="handleQRUpload(event)">
+        <label for="qrUpload" class="file-label">📁 Choose QR Image</label>
+      </div>
+      <video id="video" autoplay muted playsinline></video>
+      <div class="scanner-buttons">
+        <button onclick="startScanner()">📷 Start Camera Scan</button>
+        <button id="stopScanBtn" style="display: none;">🛑 Stop Scan</button>
+      </div>
+      <textarea id="decrypted" readonly placeholder="Decrypted text appears here..."></textarea>
+    </section>
+
+    <section class="card">
+      <h2>RSA Key Management</h2>
+      <div class="form-group">
+        <label for="publicKey">🔓 Public Key</label>
+        <textarea id="publicKey" readonly></textarea>
+        <small>Use this to encrypt data.</small>
+      </div>
+      <div class="form-group">
+        <label for="privateKey">🔐 Private Key</label>
+        <textarea id="privateKey" readonly></textarea>
+        <small>Keep this secret. Used for decryption.</small>
+      </div>
+      <button onclick="downloadKeys()">⬇ Download RSA Keys</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 RSA APP</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

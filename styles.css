@@ -1,0 +1,167 @@
+/* Base Setup */
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+:root {
+  --bg-color: #000428;
+  --text-color: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --highlight: #00ffd5;
+}
+body.light-mode {
+  --bg-color: #f9f9f9;
+  --text-color: #222;
+  --card-bg: #ffffff;
+  --highlight: #0077cc;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--highlight);
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Layout */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  padding: 3rem 2rem;
+}
+
+/* Card Styling */
+.card {
+  width: 90%;
+  max-width: 700px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Inputs & Textareas */
+textarea,
+input[type="file"] {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--highlight);
+  border-radius: 12px;
+  padding: 1rem;
+  color: var(--text-color);
+  width: 100%;
+  font-size: 1rem;
+  min-height: 120px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+textarea:focus {
+  outline: none;
+  border-color: var(--highlight);
+  box-shadow: 0 0 8px var(--highlight);
+}
+
+/* Buttons */
+button {
+  background: var(--highlight);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 0.9rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+button:hover {
+  background: #00ddb5;
+}
+
+.scanner-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* File Upload */
+.custom-file {
+  position: relative;
+  overflow: hidden;
+}
+.file-label {
+  display: inline-block;
+  background: var(--highlight);
+  color: #000;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+.custom-file input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
+}
+
+/* Canvas & Video */
+canvas,
+video {
+  width: 100%;
+  max-height: 300px;
+  border-radius: 12px;
+  background: #fff;
+}
+#qrCanvas {
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+}
+
+/* Other Elements */
+label {
+  font-weight: bold;
+}
+small {
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+a {
+  color: var(--highlight);
+  text-decoration: none;
+  text-align: center;
+  display: inline-block;
+}
+footer {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: #aaa;
+}
