@@ -1,44 +1,66 @@
 let publicKey, privateKey;
 let memoryGameInProgress = false;
-let pendingQRGeneration = false;
 
+/**
+ * Loads RSA keys from localStorage. If no keys are found,
+ * it generates a new pair and saves them.
+ */
+function initializeKeys() {
+  publicKey = localStorage.getItem('rsaPublicKey');
+  privateKey = localStorage.getItem('rsaPrivateKey');
+
+  if (!publicKey || !privateKey) {
+    console.log("No keys found in storage. Generating new ones.");
+    generateKeys();
+  } else {
+    console.log("Keys loaded from storage.");
+    document.getElementById("publicKey").value = publicKey;
+    document.getElementById("privateKey").value = privateKey;
+  }
+}
+
+/**
+ * Generates a new 2048-bit RSA key pair and saves it
+ * to both the application state and localStorage.
+ */
 function generateKeys() {
   const keypair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
   publicKey = forge.pki.publicKeyToPem(keypair.publicKey);
   privateKey = forge.pki.privateKeyToPem(keypair.privateKey);
+
+  // Save the new keys to localStorage for persistence
+  localStorage.setItem('rsaPublicKey', publicKey);
+  localStorage.setItem('rsaPrivateKey', privateKey);
+
   document.getElementById("publicKey").value = publicKey;
   document.getElementById("privateKey").value = privateKey;
+  alert("New RSA key pair generated and saved to your browser!");
 }
 
-// --- ONLY trigger memory game on QR button click ---
+/**
+ * Removes the stored RSA keys from localStorage after user confirmation.
+ * This will prevent decryption of previously created QR codes.
+ */
+function clearKeys() {
+    if (confirm("Are you sure you want to clear the stored RSA keys?\nYou will NOT be able to decrypt old QR codes with these keys.")) {
+        localStorage.removeItem('rsaPublicKey');
+        localStorage.removeItem('rsaPrivateKey');
+        publicKey = null;
+        privateKey = null;
+        document.getElementById("publicKey").value = '';
+        document.getElementById("privateKey").value = '';
+        alert("RSA keys cleared from browser storage.");
+    }
+}
+
+/**
+ * Initiates the memory game as a prerequisite for generating a QR code.
+ */
 function encryptAndGenerateQR() {
   if (!memoryGameInProgress) {
-    pendingQRGeneration = true;
     showMemoryGameModal();
     return;
   }
-  if (!publicKey) generateKeys();
-  const msg = document.getElementById("message").value;
-  const pub = forge.pki.publicKeyFromPem(publicKey);
-  const encrypted = pub.encrypt(msg, "RSA-OAEP");
-  const base64 = forge.util.encode64(encrypted);
-  new QRious({
-    element: document.getElementById("qrCanvas"),
-    value: base64,
-    size: 250,
-  });
-  const link = document.getElementById("downloadQR");
-  link.href = document.getElementById("qrCanvas").toDataURL();
-  link.style.display = "inline-block";
-}
-
-function encryptAndGenerateQR() {
-  // Only launch the game if not already in progress
-  if (!memoryGameInProgress) {
-    showMemoryGameModal();
-    return;
-  }
-  // If called from inside the game, this does nothing (see below)
 }
 
 function showMemoryGameModal() {
@@ -76,7 +98,7 @@ function startMemoryGame() {
               setTimeout(() => {
                 document.getElementById('memory-game-section').classList.remove('active');
                 memoryGameInProgress = false; // Mark game as not in progress
-                // --- DIRECTLY generate QR here, do not call encryptAndGenerateQR() ---
+                // --- DIRECTLY generate QR here ---
                 generateQRAfterGame();
               }, 300);
             }
@@ -93,9 +115,16 @@ function startMemoryGame() {
   });
 }
 
+/**
+ * Generates the encrypted QR code after the memory game is successfully completed.
+ */
 function generateQRAfterGame() {
-  if (!publicKey) generateKeys();
+  if (!publicKey) generateKeys(); // Failsafe in case keys were cleared
   const msg = document.getElementById("message").value;
+  if (!msg) {
+      alert("Please enter a message to encrypt.");
+      return;
+  }
   const pub = forge.pki.publicKeyFromPem(publicKey);
   const encrypted = pub.encrypt(msg, "RSA-OAEP");
   const base64 = forge.util.encode64(encrypted);
@@ -109,9 +138,13 @@ function generateQRAfterGame() {
   link.style.display = "inline-block";
 }
 
-// --- The rest of your app logic remains the same ---
+// --- Key/QR Management & Decryption ---
 
 function downloadKeys() {
+  if (!publicKey || !privateKey) {
+      alert("No keys to download. Please generate a pair first.");
+      return;
+  }
   const blob = new Blob([
     `Public Key:\n${publicKey}\n\nPrivate Key:\n${privateKey}`
   ], { type: "text/plain" });
@@ -125,6 +158,7 @@ function downloadKeys() {
 
 function handleQRUpload(event) {
   const file = event.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     const img = new Image();
@@ -136,8 +170,11 @@ function handleQRUpload(event) {
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, canvas.width, canvas.height);
-      if (code) decryptMessage(code.data);
-      else alert("No QR code detected in uploaded image.");
+      if (code) {
+          decryptMessage(code.data);
+      } else {
+          alert("No QR code detected in the uploaded image.");
+      }
     };
     img.src = reader.result;
   };
@@ -145,13 +182,23 @@ function handleQRUpload(event) {
 }
 
 function decryptMessage(base64) {
-  if (!privateKey) return;
-  const priv = forge.pki.privateKeyFromPem(privateKey);
-  const encryptedBytes = forge.util.decode64(base64);
-  const decrypted = priv.decrypt(encryptedBytes, "RSA-OAEP");
-  document.getElementById("decrypted").value = decrypted;
+  if (!privateKey) {
+      alert("Cannot decrypt. Private key is not available.");
+      return;
+  }
+  try {
+    const priv = forge.pki.privateKeyFromPem(privateKey);
+    const encryptedBytes = forge.util.decode64(base64);
+    const decrypted = priv.decrypt(encryptedBytes, "RSA-OAEP");
+    document.getElementById("decrypted").value = decrypted;
+  } catch (e) {
+      alert("Decryption failed. The private key used does not match the key that encrypted this QR code.");
+      console.error("Decryption error:", e);
+  }
 }
 
+// --- Unused Scanner Functions (for reference) ---
+/*
 let activeStream = null;
 
 function startScanner() {
@@ -159,7 +206,7 @@ function startScanner() {
   const stopBtn = document.getElementById("stopScanBtn");
 
   if (!privateKey) {
-    alert("Private key not loaded. Please import or generate your private key before scanning.");
+    alert("Private key not loaded. Please generate or import your private key before scanning.");
     return;
   }
 
@@ -167,21 +214,16 @@ function startScanner() {
     .then((stream) => {
       activeStream = stream;
       video.srcObject = stream;
-
-      // Mobile compatibility
       video.setAttribute("playsinline", true);
       video.setAttribute("autoplay", true);
       video.setAttribute("muted", true);
       video.play();
-
       stopBtn.style.display = "inline-block";
 
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      let scanAttempts = 0;
 
       const scan = () => {
-        scanAttempts++;
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
@@ -192,20 +234,14 @@ function startScanner() {
           if (code) {
             decryptMessage(code.data);
             stopScanner();
-          } else if (scanAttempts > 20) {
-            alert("No QR code detected. Try adjusting the camera or lighting.");
-            stopScanner();
           } else {
-            setTimeout(() => requestAnimationFrame(scan), 500);
+            requestAnimationFrame(scan);
           }
         } else {
           requestAnimationFrame(scan);
         }
       };
-
-      video.addEventListener('loadedmetadata', () => {
-        requestAnimationFrame(scan);
-      }, { once: true });
+      requestAnimationFrame(scan);
     })
     .catch((err) => {
       console.error("Camera access error:", err);
@@ -222,11 +258,13 @@ function stopScanner() {
   }
   document.getElementById("video").srcObject = null;
 }
+*/
+
+// --- Event Listeners ---
 
 document.getElementById("modeToggle").addEventListener("click", () => {
   document.body.classList.toggle("light-mode");
 });
 
-document.getElementById("stopScanBtn").addEventListener("click", stopScanner);
-
-window.onload = generateKeys;
+// Initialize the keys when the page loads.
+window.onload = initializeKeys;
