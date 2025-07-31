@@ -7,23 +7,23 @@ body {
   transition: all 0.3s ease;
 }
 :root {
-  --bg-color: #000428;
+  --bg-color: #8e1c1c;
   --text-color: #ffffff;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --highlight: #00ffd5;
+  --card-bg: rgba(200, 92, 45, 0.05);
+  --highlight: #e26b63;
 }
 body.light-mode {
   --bg-color: #f9f9f9;
   --text-color: #222;
   --card-bg: #ffffff;
-  --highlight: #0077cc;
+  --highlight: #dc0d0d;
 }
 
 /* Header */
 .header {
   text-align: center;
   padding: 2rem 1rem;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(80, 0, 0, 0.8);
   color: var(--highlight);
   font-family: 'Orbitron', sans-serif;
 }
